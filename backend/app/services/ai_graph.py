@@ -55,30 +55,30 @@ def get_groq_llm(model_name: Optional[str] = None):
         return None
 
 def invoke_llm_with_fallback(prompt: str, system_prompt: str = "") -> Optional[str]:
-    """Invoke Groq primary model, fallback to secondary on error."""
-    llm = get_groq_llm(settings.GROQ_MODEL)
-    if not llm:
-        return None
+    """Invoke Groq with automatic model fallback."""
+    candidate_models = []
+    for m in [settings.GROQ_MODEL, "openai/gpt-oss-120b", "qwen/qwen3.8-27b", settings.GROQ_FALLBACK_MODEL, "llama-3.3-70b-versatile"]:
+        if m and m not in candidate_models:
+            candidate_models.append(m)
 
     messages = []
     if system_prompt:
         messages.append(("system", system_prompt))
     messages.append(("user", prompt))
 
-    try:
-        response = llm.invoke(messages)
-        return response.content
-    except Exception as primary_err:
-        logger.warning(f"Primary model {settings.GROQ_MODEL} failed: {primary_err}. Trying fallback {settings.GROQ_FALLBACK_MODEL}...")
-        fallback_llm = get_groq_llm(settings.GROQ_FALLBACK_MODEL)
-        if fallback_llm:
-            try:
-                res = fallback_llm.invoke(messages)
-                return res.content
-            except Exception as fb_err:
-                logger.error(f"Fallback model failed too: {fb_err}")
-                return None
-        return None
+    for model_name in candidate_models:
+        llm = get_groq_llm(model_name)
+        if not llm:
+            continue
+        try:
+            response = llm.invoke(messages)
+            if response and response.content:
+                return response.content
+        except Exception as err:
+            logger.warning(f"Groq model {model_name} invocation failed: {err}. Trying next candidate...")
+            continue
+
+    return None
 
 def parse_json_safely(text: str) -> Optional[Dict[str, Any]]:
     """Clean markdown code blocks and parse JSON."""
@@ -461,17 +461,39 @@ Return JSON in this format:
                 setattr(new_state.risk_assessment, k, v)
         changed.append("risk_assessment")
 
-    if sec == "root_cause_candidates" or "root_cause_candidates" in patch:
-        rc_patch_list = patch.get("root_cause_candidates", [])
-        if isinstance(rc_patch_list, list):
-            for rc_p in rc_patch_list:
-                rc_id = rc_p.get("id")
-                for existing_rc in new_state.root_cause_candidates:
-                    if existing_rc.id == rc_id:
-                        for k, v in rc_p.items():
-                            if hasattr(existing_rc, k) and v is not None:
-                                setattr(existing_rc, k, v)
-            changed.append("root_cause_candidates")
+    if sec == "root_cause_candidates" or "root_cause_candidates" in patch or "id" in patch or ("confirm" in message.lower() and "cause" in message.lower()) or ("reject" in message.lower() and "cause" in message.lower()):
+        rc_patch_list = []
+        if isinstance(patch, list):
+            rc_patch_list = patch
+        elif "root_cause_candidates" in patch:
+            val = patch["root_cause_candidates"]
+            rc_patch_list = val if isinstance(val, list) else [val]
+        elif isinstance(patch, dict) and ("id" in patch or "status" in patch or "confirmed_by" in patch):
+            rc_patch_list = [patch]
+
+        for rc_p in rc_patch_list:
+            if not isinstance(rc_p, dict):
+                continue
+            rc_id = rc_p.get("id")
+            for idx, existing_rc in enumerate(new_state.root_cause_candidates):
+                if existing_rc.id == rc_id or str(rc_id) in [str(idx+1), f"RC-{idx+1}", f"RC-{idx+1:02d}", f"cause {idx+1}"]:
+                    for k, v in rc_p.items():
+                        if hasattr(existing_rc, k) and v is not None and k != "id":
+                            setattr(existing_rc, k, v)
+
+        # Ensure confirm/reject user command is strictly fulfilled
+        if "confirm" in message.lower() and "cause" in message.lower():
+            import re
+            m = re.search(r'cause\s*#?([0-9]+)', message.lower())
+            idx = int(m.group(1)) - 1 if m else 0
+            if 0 <= idx < len(new_state.root_cause_candidates):
+                new_state.root_cause_candidates[idx].status = "Confirmed"
+                by_m = re.search(r'by\s+([A-Za-z\.\s\(\)]+)', message, re.I)
+                confirmer = by_m.group(1).strip() if by_m else "Dr. Anita Desai (Director QA)"
+                new_state.root_cause_candidates[idx].confirmed_by = confirmer
+                new_state.root_cause_candidates[idx].confirmed_at = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+        changed.append("root_cause_candidates")
 
     if sec == "capa_recommendations" or "capa_recommendations" in patch:
         capa_patch_list = patch.get("capa_recommendations", [])

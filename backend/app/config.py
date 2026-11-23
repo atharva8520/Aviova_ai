@@ -1,4 +1,9 @@
 import os
+from dotenv import load_dotenv
+
+# Load .env file from repo root or backend directory
+load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
 
 class Settings:
     PROJECT_NAME: str = "Aviova AI - API RCA Copilot"

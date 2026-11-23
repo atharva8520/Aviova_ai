@@ -199,7 +199,7 @@ export default function ChatPanel() {
           <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
           <span className="text-xs font-bold text-slate-200 tracking-wide">AI COPILOT</span>
           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30">
-            llama-3.3-70b-versatile
+            Groq LLaMA / GPT-OSS
           </span>
         </div>
         <button
