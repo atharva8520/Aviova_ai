@@ -1,0 +1,22 @@
+From: "QA Compliance Desk" <qa-compliance@aviova-pharma.internal>
+To: "API Investigation Team" <rca-team@aviova-pharma.internal>
+Date: Tue, 28 Oct 2026 14:15:22 +0530
+Subject: [URGENT] Deviation DEV-2026-1042: Meropenem Sterile API Particulate Contamination
+Content-Type: text/plain; charset="utf-8"
+
+URGENT QUALITY DEVIATION NOTIFICATION
+Facility: Sterile Active Pharma Ingredients Unit 2 - Cleanroom Suite 3
+Incident ID: DEV-2026-1042
+Date/Time: 2026-10-28 14:15 IST
+Product: Meropenem Sterile API Trihydrate
+Batch / Lot No: MPN-26-304
+Process Stage: Sterile Precipitation & Lyophilization
+Equipment ID: Lyophilizer Chamber LYO-03 & Clean Steam Generator CSG-01
+Reported By: Sarah Jenkins (Senior QA Compliance Officer)
+Area: Sterile Crystallization & Aseptic Processing
+
+DESCRIPTION:
+During the aseptic crystallization and vacuum drying of Meropenem Sterile API Batch MPN-26-304, visual monitoring recorded visible white particulate matter in the supernatant wash solution. In addition, moisture content Karl Fischer titration yielded 14.8% (validated spec: 11.4% - 13.4%). Differential pressure across the HEPA supply boundary in LYO-03 dropped from 22 Pa to 6 Pa.
+
+IMMEDIATE ACTION TAKEN:
+Batch MPN-26-304 quarantined immediately in cold storage chamber CS-02 at 2-8 deg C. Aseptic processing line LYO-03 shut down and tagged out for cleanroom integrity re-certification.

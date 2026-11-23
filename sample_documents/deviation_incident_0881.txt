@@ -1,0 +1,28 @@
+PHARMACEUTICAL QUALITY DEVIATION NOTIFICATION REPORT
+Facility: Hyderabad API Manufacturing Complex - Block 4
+Date/Time of Occurrence: 2026-10-14 06:30 IST
+Incident ID: DEV-2026-0881
+Product Name: Atorvastatin Calcium Trihydrate API
+Batch / Lot Number: ATC-26-088
+Process Stage: Final Stage Crystallization & Isolation
+Equipment ID: Crystallizer Tank CR-104 & Chilling Unit CU-02
+Reported By: Dr. Rajesh Sharma (Lead Production Executive)
+Area/Department: API Production Block 4 / Synthesis & Purification
+
+INCIDENT DESCRIPTION:
+During the final crystallization step of Atorvastatin Calcium Batch ATC-26-088, the in-process reaction temperature unexpectedly rose to 28.5 deg C (validated recipe range: 12.0 - 16.0 deg C) over a period of 42 minutes before alarming. Subsequent HPLC in-process analysis indicated an Out of Specification (OOS) result for Related Substance Impurity D (Diastereomer impurity) at 0.28% (USP / Ph. Eur. specification limit: NMT 0.15%). The batch crystallization kinetic was disrupted, leading to altered crystalline polymorphism and increased degradation product formation.
+
+IMMEDIATE ACTION TAKEN:
+1. Immediately halted crystallization sequence and engaged manual secondary brine cooling loop.
+2. Quarantined Batch ATC-26-088 in crystallization tank CR-104 with QA tamper-evident lock applied.
+3. Issued Immediate Deviation Notification DEV-2026-0881 to Quality Assurance.
+4. Withheld downstream centrifuge CF-04 from processing ATC-26-088.
+
+IMPACT ASSESSMENT:
+Batch ATC-26-088 fails critical quality attribute (CQA) for Related Substances (Impurity D at 0.28% vs limit NMT 0.15%). Cannot be released for commercial formulation without formal QA investigation, re-crystallization evaluation, or reject disposition. Potential impact on batch stability and bioequivalence. Severity classified as Major.
+
+EVIDENCE COLLECTED:
+- SCADA Temperature Trend Log CR-104 (Channel TT-104A showed erratic oscillations between 05:45 and 06:30)
+- HPLC In-process Analytical Report #QC-AR-2026-9921 showing Impurity D peak at 0.28%
+- Chilling Unit CU-02 pneumatic solenoid valve actuation inspection log
+- Calibration sticker on TT-104A temperature transmitter dated 6 months past recommended calibration interval

@@ -10,10 +10,10 @@ class Settings:
     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
     GROQ_FALLBACK_MODEL: str = os.getenv("GROQ_FALLBACK_MODEL", "llama-3.1-8b-instant")
     
-    # Database
+    # Database: defaults to SQLite for local runs, overridden by DATABASE_URL in docker-compose
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL", 
-        "postgresql+psycopg2://postgres:postgres@localhost:5432/aviova_rca"
+        "sqlite:///./aviova_rca.db"
     )
     SQLITE_FALLBACK_URL: str = "sqlite:///./aviova_rca.db"
     

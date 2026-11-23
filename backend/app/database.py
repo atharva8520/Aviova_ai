@@ -1,4 +1,5 @@
 import logging
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 from app.config import settings
@@ -8,19 +9,24 @@ logger = logging.getLogger(__name__)
 Base = declarative_base()
 
 def get_engine():
-    # Attempt to connect to PostgreSQL
+    # If explicitly using sqlite or DATABASE_URL doesn't start with postgres, use it directly
+    db_url = settings.DATABASE_URL
+    if "sqlite" in db_url:
+        return create_engine(db_url, connect_args={"check_same_thread": False})
+
+    # Attempt to connect to PostgreSQL with 1.5s timeout
     try:
         engine = create_engine(
-            settings.DATABASE_URL,
+            db_url,
             pool_pre_ping=True,
-            connect_args={"connect_timeout": 3} if "postgresql" in settings.DATABASE_URL else {}
+            connect_args={"connect_timeout": 2}
         )
         with engine.connect() as conn:
-            logger.info("Successfully connected to primary PostgreSQL database.")
+            logger.info("Successfully connected to PostgreSQL database.")
             return engine
     except Exception as e:
         logger.warning(
-            f"Could not connect to PostgreSQL ({e}). Falling back to SQLite database at {settings.SQLITE_FALLBACK_URL}"
+            f"Could not connect to PostgreSQL ({e}). Using SQLite database at {settings.SQLITE_FALLBACK_URL}"
         )
         engine = create_engine(
             settings.SQLITE_FALLBACK_URL,
