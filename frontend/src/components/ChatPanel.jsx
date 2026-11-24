@@ -22,6 +22,7 @@ import {
   clearChat 
 } from '../store/chatSlice';
 import { setFullState, setToast } from '../store/investigationSlice';
+import { FALLBACK_SAMPLE_INVESTIGATION } from '../utils/sampleData';
 
 export default function ChatPanel() {
   const dispatch = useDispatch();
@@ -174,8 +175,100 @@ export default function ChatPanel() {
     }
   };
 
+  const handleLoadSampleSafe = async () => {
+    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    dispatch(
+      addMessage({
+        id: `user-${Date.now()}`,
+        role: 'user',
+        content: '⚡ Load sample incident',
+        timestamp,
+        tool_badge: null,
+      })
+    );
+    dispatch(setLoading(true));
+    dispatch(setActiveTool('Extraction (Sample Data)'));
+
+    try {
+      let stateToLoad = null;
+      try {
+        const res = await fetch('/api/v1/sample');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.state) {
+            stateToLoad = data.state;
+          }
+        }
+      } catch (networkErr) {
+        console.warn('API sample fetch failed, using built-in offline state:', networkErr);
+      }
+
+      if (!stateToLoad) {
+        stateToLoad = FALLBACK_SAMPLE_INVESTIGATION;
+      }
+
+      dispatch(
+        setFullState({
+          newState: stateToLoad,
+          changedFields: [
+            'incident_details',
+            'risk_assessment',
+            'evidence_available',
+            'missing_evidence',
+            'five_whys',
+            'fishbone',
+            'root_cause_candidates',
+            'capa_recommendations',
+          ],
+        })
+      );
+
+      dispatch(
+        addMessage({
+          id: `ai-${Date.now()}`,
+          role: 'assistant',
+          content:
+            'Loaded realistic sample incident: **DEV-2026-0881 - Atorvastatin Calcium Crystallization Deviation**.\n\n' +
+            'The form has been populated with incident details, risk assessment, 5 Whys, 6M Fishbone, root cause candidates, and CAPA recommendations. (Offline-safe intake ready)',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          tool_badge: 'Extraction',
+        })
+      );
+
+      dispatch(
+        setToast({
+          type: 'success',
+          message: 'Loaded DEV-2026-0881 Atorvastatin Calcium sample deviation.',
+        })
+      );
+    } catch (err) {
+      dispatch(
+        setFullState({
+          newState: FALLBACK_SAMPLE_INVESTIGATION,
+          changedFields: [
+            'incident_details',
+            'risk_assessment',
+            'five_whys',
+            'fishbone',
+            'root_cause_candidates',
+            'capa_recommendations',
+          ],
+        })
+      );
+      dispatch(
+        setToast({
+          type: 'info',
+          message: 'Loaded sample deviation from local offline cache.',
+        })
+      );
+    } finally {
+      dispatch(setLoading(false));
+      dispatch(setActiveTool(null));
+    }
+  };
+
   const quickChips = [
-    { label: '⚡ Load Sample Incident', action: () => handleSend('Load sample incident') },
+    { label: '⚡ Load Sample Incident', action: handleLoadSampleSafe },
     { label: '🔍 Run RCA (5 Whys & Fishbone)', action: () => handleSend('Run Root Cause Analysis (RCA)') },
     { label: '📋 Find Missing Evidence', action: () => handleSend('Find missing evidence and regulatory gaps') },
     { label: '🛡️ Suggest CAPA Plan', action: () => handleSend('Suggest CAPA recommendations') },

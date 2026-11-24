@@ -5,6 +5,19 @@
 
 ---
 
+## 📹 Demonstration & Technical Walkthrough Videos
+
+| Video Title | Description | Link |
+| :--- | :--- | :--- |
+| **Full Product Demo Walkthrough** | 5-minute end-to-end quality workflow: Intake, 5 Whys, 6M Fishbone, QP Sign-off, and CAPA planning. | [▶️ Watch Demo Video (Placeholder)](https://youtu.be/demo_placeholder_video1) |
+| **Architecture & Technical Deep-Dive** | Technical deep dive on LangGraph multi-agent routing, Groq LLM fallback logic, and state preservation. | [▶️ Watch Technical Deep-Dive (Placeholder)](https://youtu.be/tech_placeholder_video2) |
+
+> 📖 **Demo Resources**:
+> - Detailed Step-by-Step Presentation Script: [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md)
+> - Technical Architecture & Mermaid Diagrams: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+
+---
+
 ## 🔬 Product Context & Pharma Workflow
 
 In API pharmaceutical manufacturing, investigations follow a strict quality lifecycle:

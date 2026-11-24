@@ -45,6 +45,32 @@ def on_startup():
     try:
         init_db()
         logger.info("Database initialized successfully.")
+        
+        # Seed demo investigation if database is empty
+        from app.database import SessionLocal
+        db = SessionLocal()
+        try:
+            count = db.query(Investigation).count()
+            if count == 0:
+                sample_state = get_sample_investigation_state_1()
+                seed_inv = Investigation(
+                    id="seed-atorvastatin-0881",
+                    incident_id="DEV-2026-0881",
+                    title="OOS Impurity D (0.28%) during Atorvastatin Calcium Crystallization",
+                    status="UNDER_REVIEW",
+                    data=sample_state,
+                    created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow()
+                )
+                db.add(seed_inv)
+                db.commit()
+                logger.info("Seeded initial demo investigation DEV-2026-0881 into database.")
+        except Exception as seed_err:
+            logger.warning(f"Demo seeding notice: {seed_err}")
+            db.rollback()
+        finally:
+            db.close()
+            
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
 

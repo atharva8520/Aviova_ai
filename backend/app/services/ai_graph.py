@@ -563,81 +563,91 @@ def execute_ai_workflow(
 ) -> AIActionResponse:
     """
     Main LangGraph/AI workflow router executing the intended action and returning updated state with diff tracking.
+    Guaranteed offline-safe: catches errors and preserves state without crashing.
     """
-    # If user uploaded text / document, intent is extract_incident
-    input_text = uploaded_text if uploaded_text else message
-    intent = classify_intent(message, len(input_text))
+    try:
+        # If user uploaded text / document, intent is extract_incident
+        input_text = uploaded_text if uploaded_text else message
+        intent = classify_intent(message, len(input_text))
 
-    if uploaded_text:
-        intent = "extract_incident"
+        if uploaded_text:
+            intent = "extract_incident"
 
-    if intent == "load_sample":
-        sample = get_sample_investigation_state_1()
-        new_state = RCAInvestigationState(**sample)
-        reply = (
-            "Loaded realistic sample incident: **DEV-2026-0881 - Atorvastatin Calcium Crystallization Deviation**.\n\n"
-            "The form has been populated with incident details, risk assessment, 5 Whys, 6M Fishbone, "
-            "root cause candidates, and CAPA recommendations."
-        )
+        if intent == "load_sample":
+            sample = get_sample_investigation_state_1()
+            new_state = RCAInvestigationState(**sample)
+            reply = (
+                "Loaded realistic sample incident: **DEV-2026-0881 - Atorvastatin Calcium Crystallization Deviation**.\n\n"
+                "The form has been populated with incident details, risk assessment, 5 Whys, 6M Fishbone, "
+                "root cause candidates, and CAPA recommendations."
+            )
+            return AIActionResponse(
+                reply=reply,
+                updated_state=new_state,
+                tool_used="Extraction",
+                changed_fields=["incident_details", "risk_assessment", "evidence_available", "missing_evidence", "five_whys", "fishbone", "root_cause_candidates", "capa_recommendations"]
+            )
+
+        if intent == "extract_incident":
+            updated_state, reply, changed = handle_extract_incident(input_text, current_state)
+            return AIActionResponse(
+                reply=reply,
+                updated_state=updated_state,
+                tool_used="Extraction",
+                changed_fields=changed
+            )
+
+        elif intent == "edit_investigation":
+            updated_state, reply, changed = handle_edit_investigation(message, current_state)
+            return AIActionResponse(
+                reply=reply,
+                updated_state=updated_state,
+                tool_used="Edit",
+                changed_fields=changed
+            )
+
+        elif intent == "run_rca":
+            updated_state, reply, changed = handle_run_rca(current_state)
+            return AIActionResponse(
+                reply=reply,
+                updated_state=updated_state,
+                tool_used="RCA Analysis",
+                changed_fields=changed
+            )
+
+        elif intent == "suggest_capa":
+            updated_state, reply, changed = handle_suggest_capa(current_state)
+            return AIActionResponse(
+                reply=reply,
+                updated_state=updated_state,
+                tool_used="CAPA Generation",
+                changed_fields=changed
+            )
+
+        elif intent == "find_missing_evidence":
+            updated_state, reply, changed = handle_find_missing_evidence(current_state)
+            return AIActionResponse(
+                reply=reply,
+                updated_state=updated_state,
+                tool_used="Missing Evidence",
+                changed_fields=changed
+            )
+
+        else:
+            updated_state, reply, changed = handle_chat(message, current_state)
+            return AIActionResponse(
+                reply=reply,
+                updated_state=updated_state,
+                tool_used="Chat",
+                changed_fields=changed
+            )
+    except Exception as e:
+        logger.error(f"Error in execute_ai_workflow: {e}", exc_info=True)
         return AIActionResponse(
-            reply=reply,
-            updated_state=new_state,
-            tool_used="Extraction",
-            changed_fields=["incident_details", "risk_assessment", "evidence_available", "missing_evidence", "five_whys", "fishbone", "root_cause_candidates", "capa_recommendations"]
-        )
-
-    if intent == "extract_incident":
-        updated_state, reply, changed = handle_extract_incident(input_text, current_state)
-        return AIActionResponse(
-            reply=reply,
-            updated_state=updated_state,
-            tool_used="Extraction",
-            changed_fields=changed
-        )
-
-    elif intent == "edit_investigation":
-        updated_state, reply, changed = handle_edit_investigation(message, current_state)
-        return AIActionResponse(
-            reply=reply,
-            updated_state=updated_state,
-            tool_used="Edit",
-            changed_fields=changed
-        )
-
-    elif intent == "run_rca":
-        updated_state, reply, changed = handle_run_rca(current_state)
-        return AIActionResponse(
-            reply=reply,
-            updated_state=updated_state,
-            tool_used="RCA Analysis",
-            changed_fields=changed
-        )
-
-    elif intent == "suggest_capa":
-        updated_state, reply, changed = handle_suggest_capa(current_state)
-        return AIActionResponse(
-            reply=reply,
-            updated_state=updated_state,
-            tool_used="CAPA Generation",
-            changed_fields=changed
-        )
-
-    elif intent == "find_missing_evidence":
-        updated_state, reply, changed = handle_find_missing_evidence(current_state)
-        return AIActionResponse(
-            reply=reply,
-            updated_state=updated_state,
-            tool_used="Missing Evidence",
-            changed_fields=changed
-        )
-
-    else:
-        updated_state, reply, changed = handle_chat(message, current_state)
-        return AIActionResponse(
-            reply=reply,
-            updated_state=updated_state,
-            tool_used="Chat",
-            changed_fields=changed
+            reply=f"⚠️ **Copilot System Notice:** Request could not be completed via external AI provider ({e}). Investigation state has been safely preserved according to data integrity guidelines.",
+            updated_state=current_state,
+            tool_used="System Notice",
+            changed_fields=[]
         )
 
 # --- Deterministic Domain Fallbacks (for reliable offline / test execution) ---
